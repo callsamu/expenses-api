@@ -3,11 +3,10 @@ package main
 import (
 	"io"
 	"log"
-	"strings"
 	"testing"
 )
 
-func newTestApplication() *application {
+func newTestApplication(t *testing.T) *application {
 	cfg := config{
 		port: 4001,
 		env:  "testing",
@@ -21,10 +20,4 @@ func newTestApplication() *application {
 	}
 
 	return app
-}
-
-func assertBodyContains(t *testing.T, body, substr string) {
-	if strings.Contains(body, substr) {
-		t.Errorf("want body to contain \"%s\"", body)
-	}
 }
