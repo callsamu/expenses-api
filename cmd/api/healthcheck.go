@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 )
@@ -14,10 +12,8 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 		"environment": app.config.env,
 	}
 
-	json, err := json.MarshalIndent(data, "", "\t")
+	err := app.writeJSON(w, http.StatusOK, data, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Fprintf(w, string(json))
 }
