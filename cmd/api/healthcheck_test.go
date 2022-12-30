@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHealthCheckHandler(t *testing.T) {
@@ -13,12 +16,21 @@ func TestHealthCheckHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	app := newTestApplication()
-
+	app := newTestApplication(t)
 	app.healthcheckHandler(response, request)
-	body := response.Body.String()
 
-	assertBodyContains(t, body, "available")
-	assertBodyContains(t, body, app.config.env)
-	assertBodyContains(t, body, version)
+	var input struct {
+		Status      string `json:"status"`
+		Version     string `json:"version"`
+		Environment string `json:"environment"`
+	}
+
+	err = json.NewDecoder(response.Body).Decode(&input)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "available", input.Status)
+	assert.Equal(t, version, input.Version)
+	assert.Equal(t, app.config.env, input.Environment)
 }
