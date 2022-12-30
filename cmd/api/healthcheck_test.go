@@ -33,4 +33,7 @@ func TestHealthCheckHandler(t *testing.T) {
 	assert.Equal(t, "available", input.Status)
 	assert.Equal(t, version, input.Version)
 	assert.Equal(t, app.config.env, input.Environment)
+
+	contentType := response.Header().Get("Content-Type")
+	assert.Equal(t, "application/json", contentType, "incorrect content-type header")
 }
