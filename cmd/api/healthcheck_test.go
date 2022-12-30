@@ -20,9 +20,11 @@ func TestHealthCheckHandler(t *testing.T) {
 	app.healthcheckHandler(response, request)
 
 	var input struct {
-		Status      string `json:"status"`
-		Version     string `json:"version"`
-		Environment string `json:"environment"`
+		Status     string `json:"status"`
+		SystemInfo struct {
+			Version     string `json:"version"`
+			Environment string `json:"environment"`
+		} `json:"system_info"`
 	}
 
 	err = json.NewDecoder(response.Body).Decode(&input)
@@ -31,8 +33,8 @@ func TestHealthCheckHandler(t *testing.T) {
 	}
 
 	assert.Equal(t, "available", input.Status)
-	assert.Equal(t, version, input.Version)
-	assert.Equal(t, app.config.env, input.Environment)
+	assert.Equal(t, version, input.SystemInfo.Version)
+	assert.Equal(t, app.config.env, input.SystemInfo.Environment)
 
 	contentType := response.Header().Get("Content-Type")
 	assert.Equal(t, "application/json", contentType, "incorrect content-type header")
