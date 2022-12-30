@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+const version = "1.0.0"
+
 type config struct {
 	port int
 	env  string
@@ -33,11 +35,8 @@ func main() {
 		config: cfg,
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/v1/healthcheck", app.healthcheckHandler)
-
 	srv := http.Server{
-		Handler:      mux,
+		Handler:      app.routes(),
 		WriteTimeout: 30 * time.Second,
 		ReadTimeout:  10 * time.Second,
 		Addr:         fmt.Sprintf(":%d", cfg.port),
