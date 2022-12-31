@@ -34,13 +34,13 @@ db/migrations/new:
 .PHONY: db/migrations/up
 db/migrations/up: confirm
 	@echo "Running migrations..."
-	migrate -path ./migrations -database=${PFAPI-DB-DSN} up
+	migrate -path ./migrations -database="${PFAPI-DB-DSN}" up
 
 # ========================================= #
 # Quality Control
 # ========================================== #
 
-## audit: tidy dependencies and format, vet and test all code
+## audit: tidy dependencies and format, vet and run unit tests
 .PHONY: audit
 audit:
 	@echo "Tidying and veryfing module dependencies..."
@@ -50,7 +50,16 @@ audit:
 	go fmt ./...
 	@echo "Vetting code..."
 	go vet ./...
-	staticcheck ./...
+	go test -v -short ./...
+	
+## test/integration: run integration tests
+.PHONY: test/integration
+test/integration:
+	@echo "Starting service containers..."
+	docker-compose -f docker-compose.test.yml up -d 
+	@echo "Running tests..."
+	go test ./internal/data
+	@echo "Shutting down services..."
 
 # ========================================= #
 # Build
