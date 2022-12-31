@@ -27,10 +27,13 @@ func TestHealthCheckHandler(t *testing.T) {
 		} `json:"system_info"`
 	}
 
+	t.Log(response.Body.String())
 	err = json.NewDecoder(response.Body).Decode(&input)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	t.Log(input)
 
 	assert.Equal(t, "available", input.Status)
 	assert.Equal(t, version, input.SystemInfo.Version)
