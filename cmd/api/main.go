@@ -67,6 +67,7 @@ func main() {
 	app := &application{
 		logger: log,
 		config: cfg,
+		models: data.NewModels(db),
 	}
 
 	srv := http.Server{
