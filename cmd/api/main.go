@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/callsamu/pfapi/internal/data"
 	_ "github.com/lib/pq"
 )
 
@@ -26,6 +27,7 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	models data.Models
 }
 
 func openDB(cfg config) (*sql.DB, error) {
