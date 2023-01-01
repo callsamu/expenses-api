@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +11,7 @@ import (
 func TestHealthCheckHandler(t *testing.T) {
 	app, _ := newTestApplication(t)
 	ts := newTestServer(app.routes())
-	response := ts.GET(t, "/v1/healthcheck")
+	response := ts.request(t, http.MethodGet, "/v1/healthcheck", nil)
 
 	var input struct {
 		Status     string `json:"status"`

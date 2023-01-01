@@ -42,8 +42,9 @@ func newTestServer(handler http.Handler) *testServer {
 	return &testServer{httptest.NewServer(handler)}
 }
 
-func (ts *testServer) GET(t *testing.T, uri string) *http.Response {
-	response, err := ts.Client().Get(ts.URL + uri)
+func (ts *testServer) request(t *testing.T, method string, url string, body []byte) *http.Response {
+	request, err := http.NewRequest(method, ts.URL+url, bytes.NewBuffer(body))
+	response, err := ts.Client().Do(request)
 	if err != nil {
 		t.Fatal(err)
 	}
