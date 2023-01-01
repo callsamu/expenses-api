@@ -2,22 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHealthCheckHandler(t *testing.T) {
-	response := httptest.NewRecorder()
-	request, err := http.NewRequest("GET", "/v1/healthcheck", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	app, _ := newTestApplication(t)
-	app.healthcheckHandler(response, request)
+	ts := newTestServer(app.routes())
+	response := ts.GET(t, "/v1/healthcheck")
 
 	var input struct {
 		Status     string `json:"status"`
@@ -27,7 +20,7 @@ func TestHealthCheckHandler(t *testing.T) {
 		} `json:"system_info"`
 	}
 
-	err = json.NewDecoder(response.Body).Decode(&input)
+	err := json.NewDecoder(response.Body).Decode(&input)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,6 +29,6 @@ func TestHealthCheckHandler(t *testing.T) {
 	assert.Equal(t, version, input.SystemInfo.Version)
 	assert.Equal(t, app.config.env, input.SystemInfo.Environment)
 
-	contentType := response.Header().Get("Content-Type")
+	contentType := response.Header.Get("Content-Type")
 	assert.Equal(t, "application/json", contentType, "incorrect content-type header")
 }
