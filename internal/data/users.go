@@ -20,13 +20,13 @@ type password struct {
 }
 
 type User struct {
-	ID        int64
-	Name      string
-	Email     string
-	Password  password
-	Version   int
-	Activated bool
-	CreatedAt time.Time
+	ID        int64     `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Password  password  `json:"-"`
+	Version   int       `json:"-"`
+	Activated bool      `json:"activated"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func (p *password) Set(plaintext string) error {
