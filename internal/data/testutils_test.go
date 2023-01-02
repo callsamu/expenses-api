@@ -59,3 +59,43 @@ func SeedUsers(t *testing.T, tdb *testdb.TestDB) []User {
 
 	return users
 }
+
+func SeedTokens(t *testing.T, tdb *testdb.TestDB) []*Token {
+	var tokens []*Token
+
+	targs := []struct {
+		userID int64
+		scope  string
+		ttl    time.Duration
+	}{
+		{ // Will automatically expire
+			userID: 1,
+			scope:  ScopeActivation,
+			ttl:    0,
+		},
+		{ // Wont expire
+			userID: 1,
+			scope:  ScopeActivation,
+			ttl:    time.Hour,
+		},
+	}
+
+	query := `
+		INSERT INTO tokens (user_id, hash, scope, expiry)
+		VALUES ($1, $2, $3, $4)
+	`
+
+	for _, args := range targs {
+		token, err := generateToken(args.userID, args.ttl, args.scope)
+		if err != nil {
+			t.Fatal(err)
+		}
+		tokens = append(tokens, token)
+		_, err = tdb.DB.Exec(query, token.UserID, token.Hash, token.Scope, token.Expiry)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	return tokens
+}
