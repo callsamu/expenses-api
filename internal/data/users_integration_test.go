@@ -5,6 +5,7 @@ import (
 
 	"github.com/callsamu/pfapi/internal/testdb"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUserModelInsertsUser(t *testing.T) {
@@ -106,4 +107,41 @@ func TestUserModelUpdatesUser(t *testing.T) {
 		assert.ErrorIs(t, err, ErrEditConflict)
 	})
 
+}
+
+func TestUserModelFindsUserByToken(t *testing.T) {
+	if testing.Short() {
+		t.Skip("data: skipping integration test")
+	}
+
+	tdb := testdb.Open(t)
+	defer tdb.Close()
+
+	user := SeedUsers(t, tdb)[0]
+	tokens := SeedTokens(t, tdb)
+
+	model := UserModel{DB: tdb.DB}
+
+	cases := []struct {
+		name      string
+		plaintext string
+	}{
+		{
+			name:      "gets right user for token",
+			plaintext: tokens[0].Plaintext,
+		},
+		{
+			name:      "ignores expired tokens",
+			plaintext: tokens[1].Plaintext,
+		},
+	}
+
+	for _, ts := range cases {
+		t.Run(ts.name, func(t *testing.T) {
+			retrievedUser, err := model.GetForToken(ScopeActivation, ts.plaintext)
+			require.Nil(t, err)
+			assert.Equal(t, user.ID, retrievedUser.ID)
+			assert.Equal(t, user.Email, retrievedUser.Email)
+		})
+	}
 }

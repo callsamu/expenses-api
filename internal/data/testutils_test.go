@@ -68,15 +68,15 @@ func SeedTokens(t *testing.T, tdb *testdb.TestDB) []*Token {
 		scope  string
 		ttl    time.Duration
 	}{
+		{
+			userID: 1,
+			scope:  ScopeActivation,
+			ttl:    time.Hour,
+		},
 		{ // Will automatically expire
 			userID: 1,
 			scope:  ScopeActivation,
 			ttl:    0,
-		},
-		{ // Wont expire
-			userID: 1,
-			scope:  ScopeActivation,
-			ttl:    time.Hour,
 		},
 	}
 

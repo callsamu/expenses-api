@@ -2,11 +2,13 @@ package data
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"strings"
 	"time"
 
+	"github.com/callsamu/pfapi/internal/validator"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -27,6 +29,30 @@ type User struct {
 	Version   int       `json:"-"`
 	Activated bool      `json:"activated"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+func ValidateEmail(v *validator.Validator, email string) {
+	v.Check(email != "", "email", "must be provided")
+	v.Check(validator.Matches(email, validator.EmailRX), "email", "must be a valid email address")
+}
+
+func ValidatePassword(v *validator.Validator, plaintext string) {
+	v.Check(plaintext != "", "password", "must be provided")
+	v.Check(len(plaintext) >= 10, "password", "must be at least 10 bytes long")
+	v.Check(len(plaintext) <= 72, "password", "must not be more than 72 bytes long")
+}
+
+func ValidateUser(v *validator.Validator, user *User) {
+	v.Check(user.Name != "", "name", "must be provided")
+	v.Check(len(user.Name) <= 256, "name", "must no be more than 500 bytes long")
+
+	if user.Password.Plaintext != nil {
+		ValidatePassword(v, *user.Password.Plaintext)
+	}
+
+	if user.Password.Hash == nil {
+		panic("missing password hash for user")
+	}
 }
 
 func (p *password) Set(plaintext string) error {
@@ -136,4 +162,45 @@ func (m *UserModel) Update(user *User) error {
 	}
 
 	return nil
+}
+
+func (m *UserModel) GetForToken(scope string, tokenPlaintext string) (*User, error) {
+	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
+
+	query := `
+		SELECT users.id, users.created_at, users.name, users.email, users.password_hash, users.activated, users.version
+		FROM users
+		INNER JOIN tokens
+		ON users.id = tokens.user_id
+		WHERE tokens.hash = $1
+		AND tokens.scope = $2
+		AND tokens.expiry > $3
+	`
+
+	args := []any{tokenHash[:], scope, time.Now()}
+
+	var user User
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(
+		&user.ID,
+		&user.CreatedAt,
+		&user.Name,
+		&user.Email,
+		&user.Password.Hash,
+		&user.Activated,
+		&user.Version,
+	)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	return &user, nil
 }
