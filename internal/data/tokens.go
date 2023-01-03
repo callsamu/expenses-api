@@ -7,6 +7,8 @@ import (
 	"database/sql"
 	"encoding/base32"
 	"time"
+
+	"github.com/callsamu/expenses-api/internal/validator"
 )
 
 const (
@@ -42,6 +44,11 @@ func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error
 	}
 
 	return token, nil
+}
+
+func ValidateTokenPlaintext(v *validator.Validator, plaintext string) {
+	v.Check(plaintext != "", "token", "must be provided")
+	v.Check(len(plaintext) == 26, "token", "must be 26 bytes long")
 }
 
 type TokenModel struct {
