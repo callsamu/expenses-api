@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"testing"
 	"time"
@@ -53,7 +54,7 @@ func TestRegisterUsersHandler(t *testing.T) {
 			}
 
 			columns := sqlmock.NewRows([]string{"id", "version", "created_at"})
-			mock.ExpectQuery("").WillReturnRows(columns.AddRow(1, 1, time.Now()))
+			mock.ExpectQuery("INSERT").WillReturnRows(columns.AddRow(1, 1, time.Now()))
 
 			response := tsrv.request(t, http.MethodPost, "/v1/users/register", inputJSON)
 			require.Equal(t, ts.wantStatus, response.StatusCode)
@@ -83,6 +84,23 @@ func TestRegisterUsersHandler(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode)
 	})
 
+	t.Run("returns validation failed if email is duplicated", func(t *testing.T) {
+		input := envelope{
+			"name":     "foo",
+			"email":    "foo@example.com",
+			"password": "mypassword",
+		}
+		inputJSON, err := json.Marshal(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		error := errors.New("user_email_key")
+		mock.ExpectQuery("INSERT").WillReturnError(error)
+
+		response := tsrv.request(t, http.MethodPost, "/v1/users/register", inputJSON)
+		assert.Equal(t, http.StatusUnprocessableEntity, response.StatusCode)
+	})
 }
 
 func TestActivateUsersHandler(t *testing.T) {
