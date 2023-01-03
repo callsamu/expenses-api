@@ -12,6 +12,7 @@ func (app *application) routes() http.Handler {
 	r.HandlerFunc(http.MethodGet, "/v1/healthcheck", app.healthcheckHandler)
 
 	r.HandlerFunc(http.MethodPost, "/v1/users/register", app.registerUserHandler)
+	r.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activateUserHandler)
 
 	r.NotFound = http.HandlerFunc(app.notFoundResponse)
 
