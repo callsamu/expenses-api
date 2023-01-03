@@ -75,7 +75,7 @@ func (app *application) activateUserHandler(w http.ResponseWriter, r *http.Reque
 	user, err := app.models.Users.GetForToken(data.ScopeActivation, input.Token)
 	if err != nil {
 		switch {
-		case errors.Is(err, data.ErrRecordNotFound):
+		case errors.Is(err, data.ErrDuplicateEmail):
 			v.AddError("token", "invalid or expired activation token")
 			app.failedValidationResponse(w, r, v.Errors)
 		default:
