@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/callsamu/pfapi/internal/data"
+	"github.com/callsamu/expenses-api/internal/data"
 	_ "github.com/lib/pq"
 )
 

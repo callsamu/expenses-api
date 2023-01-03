@@ -3,7 +3,7 @@ package data
 import (
 	"testing"
 
-	"github.com/callsamu/pfapi/internal/testdb"
+	"github.com/callsamu/expenses-api/internal/testdb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

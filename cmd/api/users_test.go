@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/callsamu/pfapi/internal/data"
+	"github.com/callsamu/expenses-api/internal/data"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterUsersHandler(t *testing.T) {
@@ -26,8 +27,15 @@ func TestRegisterUsersHandler(t *testing.T) {
 			name:       "Handles basic requests",
 			username:   "foobar",
 			email:      "foobar@example.com",
-			password:   "password",
+			password:   "mypassword",
 			wantStatus: http.StatusCreated,
+		},
+		{
+			name:       "Validates requests",
+			username:   "",
+			email:      "invalid@example.com",
+			password:   "tooshort",
+			wantStatus: http.StatusUnprocessableEntity,
 		},
 	}
 
@@ -47,7 +55,10 @@ func TestRegisterUsersHandler(t *testing.T) {
 			mock.ExpectQuery("").WillReturnRows(columns.AddRow(1, 1, time.Now()))
 
 			response := tsrv.request(t, http.MethodPost, "/v1/users/register", inputJSON)
-			assert.Equal(t, ts.wantStatus, response.StatusCode)
+			require.Equal(t, ts.wantStatus, response.StatusCode)
+			if ts.wantStatus != http.StatusCreated {
+				return
+			}
 
 			var output struct {
 				User data.User `json:"user"`

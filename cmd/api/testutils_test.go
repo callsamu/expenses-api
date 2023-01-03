@@ -9,10 +9,10 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/callsamu/pfapi/internal/data"
+	"github.com/callsamu/expenses-api/internal/data"
 )
 
-func newTestApplication(t *testing.T) (*application, *sqlmock.Sqlmock) {
+func newTestApplication(t *testing.T) (*application, sqlmock.Sqlmock) {
 	cfg := config{
 		port: 4000,
 		env:  "testing",
@@ -31,7 +31,7 @@ func newTestApplication(t *testing.T) (*application, *sqlmock.Sqlmock) {
 		models: data.NewModels(db),
 	}
 
-	return app, &mock
+	return app, mock
 }
 
 type testServer struct {

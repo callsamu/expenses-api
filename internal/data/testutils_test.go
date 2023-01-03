@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/callsamu/pfapi/internal/testdb"
+	"github.com/callsamu/expenses-api/internal/testdb"
 )
 
 func SeedUsers(t *testing.T, tdb *testdb.TestDB) []User {

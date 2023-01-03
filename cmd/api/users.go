@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/callsamu/pfapi/internal/data"
+	"github.com/callsamu/expenses-api/internal/data"
+	"github.com/callsamu/expenses-api/internal/validator"
 )
 
 func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -27,6 +28,12 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	err = user.Password.Set(input.Password)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	v := validator.New()
+	if data.ValidateUser(v, user); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 

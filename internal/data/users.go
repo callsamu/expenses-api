@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/callsamu/pfapi/internal/validator"
+	"github.com/callsamu/expenses-api/internal/validator"
 	"golang.org/x/crypto/bcrypt"
 )
 
