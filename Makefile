@@ -22,7 +22,7 @@ confirm:
 .PHONY: run/api
 run/api:
 	go build -o bin/api ./cmd/api/
-	exec bin/api -db-dsn=${PFAPI-DB-DSN}
+	exec bin/api -db-dsn=${EXPENSES-DB-DSN}
 
 ## db/migrations/new name=$1: create a new database migration
 .PHONY: db/migrations/new
@@ -34,7 +34,7 @@ db/migrations/new:
 .PHONY: db/migrations/up
 db/migrations/up: confirm
 	@echo "Running migrations..."
-	migrate -path ./migrations -database="${PFAPI-DB-DSN}" up
+	migrate -path ./migrations -database="${EXPENSES-DB-DSN}" up
 
 # ========================================= #
 # Quality Control

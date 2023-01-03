@@ -3,8 +3,8 @@ services:
   test-db:
     image: postgres:14.1-alpine
     environment:
-      -  POSTGRES_USER=pfapi_test
-      -  POSTGRES_DATABASE=pfapi_test
+      -  POSTGRES_USER=expenses_test
+      -  POSTGRES_DATABASE=expenses_test
       -  POSTGRES_PASSWORD=postgres
     ports:
       - "5432:5432"

@@ -4,8 +4,8 @@ services:
     image: postgres:14.1-alpine
     restart: always
     environment:
-      -  POSTGRES_USER=pfapi
-      -  POSTGRES_DATABASE=pfapi
+      -  POSTGRES_USER=expenses
+      -  POSTGRES_DATABASE=expenses
       -  POSTGRES_PASSWORD=postgres
     ports:
       - "5432:5432"
