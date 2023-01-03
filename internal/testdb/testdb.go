@@ -42,6 +42,6 @@ func Open(t *testing.T) *TestDB {
 }
 
 func (tdb *TestDB) Close() {
-	tdb.m.Drop()
+	tdb.m.Down()
 	tdb.DB.Close()
 }

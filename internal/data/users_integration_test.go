@@ -125,21 +125,27 @@ func TestUserModelFindsUserByToken(t *testing.T) {
 	cases := []struct {
 		name      string
 		plaintext string
+		err       error
 	}{
 		{
 			name:      "gets right user for token",
 			plaintext: tokens[0].Plaintext,
+			err:       nil,
 		},
 		{
 			name:      "ignores expired tokens",
 			plaintext: tokens[1].Plaintext,
+			err:       ErrRecordNotFound,
 		},
 	}
 
 	for _, ts := range cases {
 		t.Run(ts.name, func(t *testing.T) {
 			retrievedUser, err := model.GetForToken(ScopeActivation, ts.plaintext)
-			require.Nil(t, err)
+			require.ErrorIs(t, err, ts.err)
+			if ts.err != nil {
+				return
+			}
 			assert.Equal(t, user.ID, retrievedUser.ID)
 			assert.Equal(t, user.Email, retrievedUser.Email)
 		})
