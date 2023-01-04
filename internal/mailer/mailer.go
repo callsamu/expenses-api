@@ -44,7 +44,9 @@ func (m Mailer) Send(recipient, templateFile string, data any) error {
 	}
 
 	msg := mail.NewMessage()
-	msg.SetHeader("subject", subject.String())
+	msg.SetHeader("To", recipient)
+	msg.SetHeader("From", m.sender)
+	msg.SetHeader("Subject", subject.String())
 	msg.SetBody("text/plain", body.String())
 
 	err = m.dialer.DialAndSend(msg)
