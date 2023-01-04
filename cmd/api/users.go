@@ -54,6 +54,7 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 	token, err := app.models.Tokens.New(user.ID, 24*time.Hour, data.ScopeActivation)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
+		return
 	}
 
 	app.background(func() {

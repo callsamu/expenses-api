@@ -15,7 +15,7 @@ import (
 )
 
 func TestRegisterUsersHandler(t *testing.T) {
-	app, mock := newTestApplication(t)
+	app, mocks := newTestApplication(t)
 	tsrv := newTestServer(app.routes())
 
 	cases := []struct {
@@ -54,13 +54,23 @@ func TestRegisterUsersHandler(t *testing.T) {
 			}
 
 			columns := sqlmock.NewRows([]string{"id", "version", "created_at"})
-			mock.ExpectQuery("INSERT").WillReturnRows(columns.AddRow(1, 1, time.Now()))
+			mocks.db.ExpectQuery("INSERT INTO users").WillReturnRows(columns.AddRow(1, 1, time.Now()))
+			mocks.db.ExpectExec("INSERT INTO tokens").WillReturnResult(sqlmock.NewResult(1, 1))
 
 			response := tsrv.request(t, http.MethodPost, "/v1/users/register", inputJSON)
 			require.Equal(t, ts.wantStatus, response.StatusCode)
+
 			if ts.wantStatus != http.StatusCreated {
 				return
 			}
+
+			if err := mocks.db.ExpectationsWereMet(); err != nil {
+				t.Error(err)
+			}
+
+			require.EqualValues(t, 1, mocks.mailer.calls)
+			assert.EqualValues(t, ts.email, mocks.mailer.recipient)
+			assert.NotNil(t, mocks.mailer.data)
 
 			var output struct {
 				User data.User `json:"user"`
@@ -71,6 +81,7 @@ func TestRegisterUsersHandler(t *testing.T) {
 			assert.Equal(t, ts.username, output.User.Name)
 			assert.Equal(t, ts.email, output.User.Email)
 			assert.Equal(t, false, output.User.Activated)
+
 		})
 	}
 
@@ -78,7 +89,7 @@ func TestRegisterUsersHandler(t *testing.T) {
 		input := []byte(`{ "foo": "bar" "ha"}`)
 
 		columns := sqlmock.NewRows([]string{"id", "version", "created_at"})
-		mock.ExpectQuery("").WillReturnRows(columns.AddRow(1, 1, time.Now()))
+		mocks.db.ExpectQuery("").WillReturnRows(columns.AddRow(1, 1, time.Now()))
 
 		response := tsrv.request(t, http.MethodPost, "/v1/users/register", input)
 		assert.Equal(t, http.StatusBadRequest, response.StatusCode)
@@ -96,7 +107,7 @@ func TestRegisterUsersHandler(t *testing.T) {
 		}
 
 		error := errors.New("user_email_key")
-		mock.ExpectQuery("INSERT").WillReturnError(error)
+		mocks.db.ExpectQuery("INSERT").WillReturnError(error)
 
 		response := tsrv.request(t, http.MethodPost, "/v1/users/register", inputJSON)
 		assert.Equal(t, http.StatusUnprocessableEntity, response.StatusCode)
@@ -104,7 +115,7 @@ func TestRegisterUsersHandler(t *testing.T) {
 }
 
 func TestActivateUsersHandler(t *testing.T) {
-	app, mock := newTestApplication(t)
+	app, mocks := newTestApplication(t)
 	tsrv := newTestServer(app.routes())
 
 	t.Run("activates user when token is found", func(t *testing.T) {
@@ -121,13 +132,15 @@ func TestActivateUsersHandler(t *testing.T) {
 
 		password := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
-		mock.ExpectQuery("SELECT").WillReturnRows(columns.AddRow(1, time.Now(), "foo", "foo@example.com", password, false, 1))
-		mock.ExpectQuery("UPDATE users").WillReturnRows(sqlmock.NewRows([]string{"version"}).AddRow(1))
-		mock.ExpectExec("DELETE FROM tokens").WillReturnResult(sqlmock.NewResult(1, 1))
+		mocks.db.ExpectQuery("SELECT").WillReturnRows(columns.AddRow(1, time.Now(), "foo", "foo@example.com", password, false, 1))
+		mocks.db.ExpectQuery("UPDATE users").WillReturnRows(sqlmock.NewRows([]string{"version"}).AddRow(1))
+		mocks.db.ExpectExec("DELETE FROM tokens").WillReturnResult(sqlmock.NewResult(1, 1))
 
-		t.Log(string(inputJSON))
 		response := tsrv.request(t, http.MethodPut, "/v1/users/activated", inputJSON)
 		require.Equal(t, http.StatusOK, response.StatusCode)
+		if err = mocks.db.ExpectationsWereMet(); err != nil {
+			t.Error(err)
+		}
 
 		var output struct {
 			User data.User `json:"user"`
@@ -137,9 +150,6 @@ func TestActivateUsersHandler(t *testing.T) {
 		assert.EqualValues(t, 1, output.User.ID)
 		assert.True(t, output.User.Activated)
 
-		if err = mock.ExpectationsWereMet(); err != nil {
-			t.Error(err)
-		}
 	})
 
 	t.Run("return validation error response when tokens is not found", func(t *testing.T) {
@@ -152,12 +162,13 @@ func TestActivateUsersHandler(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		mock.ExpectQuery("SELECT").WillReturnError(sql.ErrNoRows)
+		mocks.db.ExpectQuery("SELECT").WillReturnError(sql.ErrNoRows)
 		response := tsrv.request(t, http.MethodPut, "/v1/users/activated", inputJSON)
 		require.Equal(t, http.StatusUnprocessableEntity, response.StatusCode)
-		if err = mock.ExpectationsWereMet(); err != nil {
+		if err = mocks.db.ExpectationsWereMet(); err != nil {
 			t.Error(err)
 		}
+
 	})
 
 	t.Run("return validation error response when tokens is invalid", func(t *testing.T) {
