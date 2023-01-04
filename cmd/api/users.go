@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/callsamu/expenses-api/internal/data"
 	"github.com/callsamu/expenses-api/internal/validator"
@@ -49,6 +50,19 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
+
+	token, err := app.models.Tokens.New(user.ID, 24*time.Hour, data.ScopeActivation)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+	app.background(func() {
+		data := map[string]any{"Token": token.Plaintext}
+		err = app.mailer.Send(user.Email, "activate_user.tmpl", data)
+		if err != nil {
+			app.serverErrorResponse(w, r, err)
+		}
+	})
 
 	err = app.writeJSON(w, http.StatusCreated, envelope{"user": user}, nil)
 	if err != nil {
