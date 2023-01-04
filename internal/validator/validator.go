@@ -4,7 +4,7 @@ import (
 	"regexp"
 )
 
-var EmailRX = regexp.MustCompile(`^[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*$"`)
+var EmailRX = regexp.MustCompile(`^[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*@[a-zA-Z0-9]+(?:\.[a-zA-Z0-9]+)*$`)
 
 type Validator struct {
 	Errors map[string]string
