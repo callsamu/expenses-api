@@ -22,7 +22,13 @@ confirm:
 .PHONY: run/api
 run/api:
 	go build -o bin/api ./cmd/api/
-	exec bin/api -db-dsn=${EXPENSES-DB-DSN}
+	exec bin/api \
+		-db-dsn=${EXPENSES-DB-DSN} \
+		-smtp-host=${EXPENSES-SMTP-HOST} \
+		-smtp-port=${EXPENSES-SMTP-PORT} \
+		-smtp-username=${EXPENSES-SMTP-USERNAME} \
+		-smtp-password=${EXPENSES-SMTP-PASSWORD} \
+		-smtp-sender=${EXPENSES-SMTP-SENDER}
 
 ## db/migrations/new name=$1: create a new database migration
 .PHONY: db/migrations/new
