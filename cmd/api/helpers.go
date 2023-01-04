@@ -56,3 +56,15 @@ func (app *application) readJSON(r *http.Request, input any) error {
 
 	return nil
 }
+
+func (app *application) background(fn func()) {
+	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				app.logger.Println(fmt.Errorf("%s", err))
+			}
+		}()
+
+		fn()
+	}()
+}
