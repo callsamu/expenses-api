@@ -39,7 +39,9 @@ type application struct {
 	config config
 	logger *log.Logger
 	models data.Models
-	mailer mailer.Mailer
+	mailer interface {
+		Send(recipient string, template string, data any) error
+	}
 }
 
 func openDB(cfg config) (*sql.DB, error) {
@@ -81,9 +83,9 @@ func main() {
 
 	flag.StringVar(&cfg.smtp.host, "smtp-host", "", "SMTP Host")
 	flag.IntVar(&cfg.smtp.port, "smtp-port", 2525, "SMTP Port")
-	flag.StringVar(&cfg.smtp.username, "smtp-host", "", "SMTP Username")
-	flag.StringVar(&cfg.smtp.password, "smtp-host", "", "SMTP Password")
-	flag.StringVar(&cfg.smtp.sender, "smtp-host", "", "SMTP ")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", "", "SMTP Username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP Password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "", "SMTP Sender")
 
 	flag.Parse()
 
