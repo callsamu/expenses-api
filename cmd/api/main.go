@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/callsamu/expenses-api/internal/data"
+	"github.com/callsamu/expenses-api/internal/mailer"
 	_ "github.com/lib/pq"
 )
 
@@ -25,12 +26,20 @@ type config struct {
 		maxIdleConns int
 		maxIdleTime  string
 	}
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 
 type application struct {
 	config config
 	logger *log.Logger
 	models data.Models
+	mailer mailer.Mailer
 }
 
 func openDB(cfg config) (*sql.DB, error) {
@@ -70,6 +79,12 @@ func main() {
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max idle time")
 
+	flag.StringVar(&cfg.smtp.host, "smtp-host", "", "SMTP Host")
+	flag.IntVar(&cfg.smtp.port, "smtp-port", 2525, "SMTP Port")
+	flag.StringVar(&cfg.smtp.username, "smtp-host", "", "SMTP Username")
+	flag.StringVar(&cfg.smtp.password, "smtp-host", "", "SMTP Password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-host", "", "SMTP ")
+
 	flag.Parse()
 
 	log := log.New(os.Stdout, "", log.Ldate|log.Ltime)
@@ -84,6 +99,13 @@ func main() {
 		logger: log,
 		config: cfg,
 		models: data.NewModels(db),
+		mailer: mailer.New(
+			cfg.smtp.host,
+			cfg.smtp.port,
+			cfg.smtp.username,
+			cfg.smtp.password,
+			cfg.smtp.sender,
+		),
 	}
 
 	srv := http.Server{
