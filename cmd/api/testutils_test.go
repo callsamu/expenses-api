@@ -2,19 +2,22 @@ package main
 
 import (
 	"bytes"
-	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/callsamu/expenses-api/internal/data"
-	"github.com/stretchr/testify/mock"
 )
 
 type mockMailer struct {
-	mock.Mock
+	recipient string
+	template  string
+	data      any
+
+	calls int
 }
 
 type mocks struct {
@@ -23,7 +26,12 @@ type mocks struct {
 }
 
 func (m *mockMailer) Send(recipient string, template string, data any) error {
-	m.Called(recipient, template, data)
+	m.recipient = recipient
+	m.template = template
+	m.data = data
+
+	m.calls += 1
+
 	return nil
 }
 
@@ -33,7 +41,7 @@ func newTestApplication(t *testing.T) (*application, mocks) {
 		env:  "testing",
 	}
 
-	log := log.New(io.Discard, "", 0)
+	log := log.New(os.Stdout, "", 0)
 
 	db, mockDB, err := sqlmock.New()
 	if err != nil {
