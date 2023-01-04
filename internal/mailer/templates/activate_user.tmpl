@@ -1,0 +1,11 @@
+{{ define "subject" }} Activate your Expenses Account {{ end }}
+
+{{ define "body" }}
+Hello,
+
+To activate your Expenses account, send the following token
+via a frontend or the `PUT /v1/users/activated` API endpoint:
+
+{{.Token}}
+
+{{ end }}
