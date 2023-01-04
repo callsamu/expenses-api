@@ -136,6 +136,7 @@ func TestActivateUsersHandler(t *testing.T) {
 		mocks.db.ExpectQuery("UPDATE users").WillReturnRows(sqlmock.NewRows([]string{"version"}).AddRow(1))
 		mocks.db.ExpectExec("DELETE FROM tokens").WillReturnResult(sqlmock.NewResult(1, 1))
 
+		t.Log(string(inputJSON))
 		response := tsrv.request(t, http.MethodPut, "/v1/users/activated", inputJSON)
 		require.Equal(t, http.StatusOK, response.StatusCode)
 		if err = mocks.db.ExpectationsWereMet(); err != nil {
@@ -168,7 +169,6 @@ func TestActivateUsersHandler(t *testing.T) {
 		if err = mocks.db.ExpectationsWereMet(); err != nil {
 			t.Error(err)
 		}
-
 	})
 
 	t.Run("return validation error response when tokens is invalid", func(t *testing.T) {
