@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/callsamu/expenses-api/internal/data"
-	"github.com/stretchr/testify/mock"
 )
 
 var MockNonActivatedUser = &data.User{
@@ -25,11 +24,10 @@ var MockActivatedUser = &data.User{
 	CreatedAt: time.Now(),
 }
 
-type UserModel struct {
-	mock.Mock
-}
+type UserModel struct{}
 
 func (m *UserModel) Insert(user *data.User) error {
+
 	if user.Email == MockActivatedUser.Email || user.Email == MockNonActivatedUser.Email {
 		return data.ErrDuplicateEmail
 	}
@@ -55,7 +53,9 @@ func (m *UserModel) GetByEmail(email string) (*data.User, error) {
 }
 
 func (m *UserModel) Update(user *data.User) error {
-	if user.Email == MockActivatedUser.Email || user.Email == MockNonActivatedUser.Email {
+	if user.ID == 1 && user.Email == MockActivatedUser.Email {
+		return data.ErrDuplicateEmail
+	} else if user.ID == 2 && user.Email == MockNonActivatedUser.Email {
 		return data.ErrDuplicateEmail
 	}
 

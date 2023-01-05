@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/callsamu/expenses-api/internal/data"
-	"github.com/stretchr/testify/mock"
 )
+
+var MockPlaintext = "abcabcabcabcabcabcabcabc00"
 
 var MockActivationToken = &data.Token{
 	UserID:    1,
@@ -22,12 +23,10 @@ var MockActivationToken = &data.Token{
 //	Scope:     data.,
 //}
 
-type TokenModel struct {
-	mock.Mock
-}
+type TokenModel struct{}
 
 func (m *TokenModel) New(userID int64, ttl time.Duration, scope string) (*data.Token, error) {
-	plaintext := "abcabcabcabcabcabcabcabc00"
+	plaintext := MockPlaintext
 	hash := sha256.Sum256([]byte(plaintext))
 
 	token := &data.Token{
