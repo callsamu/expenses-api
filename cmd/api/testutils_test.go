@@ -8,8 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/callsamu/expenses-api/internal/data"
+	"github.com/callsamu/expenses-api/internal/mocks"
 )
 
 type mockMailer struct {
@@ -20,9 +20,10 @@ type mockMailer struct {
 	calls int
 }
 
-type mocks struct {
+type mock struct {
 	mailer *mockMailer
-	db     sqlmock.Sqlmock
+	users  *mocks.UserModel
+	tokens *mocks.TokenModel
 }
 
 func (m *mockMailer) Send(recipient string, template string, data any) error {
@@ -35,7 +36,7 @@ func (m *mockMailer) Send(recipient string, template string, data any) error {
 	return nil
 }
 
-func newTestApplication(t *testing.T) (*application, mocks) {
+func newTestApplication(t *testing.T) (*application, mock) {
 	cfg := config{
 		port: 4000,
 		env:  "testing",
@@ -43,23 +44,24 @@ func newTestApplication(t *testing.T) (*application, mocks) {
 
 	log := log.New(os.Stdout, "", 0)
 
-	db, mockDB, err := sqlmock.New()
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	mockMailer := &mockMailer{}
+	mockUsers := &mocks.UserModel{}
+	mockTokens := &mocks.TokenModel{}
 
 	app := &application{
 		logger: log,
 		config: cfg,
-		models: data.NewModels(db),
 		mailer: mockMailer,
+		models: data.Models{
+			Users:  mockUsers,
+			Tokens: mockTokens,
+		},
 	}
 
-	mocks := mocks{
-		db:     mockDB,
+	mocks := mock{
 		mailer: mockMailer,
+		users:  mockUsers,
+		tokens: mockTokens,
 	}
 
 	return app, mocks
