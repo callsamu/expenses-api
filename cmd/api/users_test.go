@@ -1,181 +1,132 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"testing"
-	"time"
 
-	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/callsamu/expenses-api/internal/data"
+	"github.com/callsamu/expenses-api/internal/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRegisterUsersHandler(t *testing.T) {
-	app, mocks := newTestApplication(t)
+	app, mock := newTestApplication(t)
 	tsrv := newTestServer(app.routes())
 
-	cases := []struct {
-		name       string
-		username   string
-		email      string
-		password   string
-		wantStatus int
-	}{
-		{
-			name:       "Handles basic requests",
-			username:   "foobar",
-			email:      "foobar@example.com",
-			password:   "mypassword",
-			wantStatus: http.StatusCreated,
-		},
-		{
-			name:       "Validates requests",
-			username:   "",
-			email:      "invalid@example.com",
-			password:   "tooshort",
-			wantStatus: http.StatusUnprocessableEntity,
-		},
-	}
-
-	for _, ts := range cases {
-		t.Run(ts.name, func(t *testing.T) {
-			input := envelope{
-				"name":     ts.username,
-				"email":    ts.email,
-				"password": ts.password,
-			}
-			inputJSON, err := json.Marshal(input)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			columns := sqlmock.NewRows([]string{"id", "version", "created_at"})
-			mocks.db.ExpectQuery("INSERT INTO users").WillReturnRows(columns.AddRow(1, 1, time.Now()))
-			mocks.db.ExpectExec("INSERT INTO tokens").WillReturnResult(sqlmock.NewResult(1, 1))
-
-			response := tsrv.request(t, http.MethodPost, "/v1/users/register", inputJSON)
-			require.Equal(t, ts.wantStatus, response.StatusCode)
-
-			if ts.wantStatus != http.StatusCreated {
-				return
-			}
-
-			if err := mocks.db.ExpectationsWereMet(); err != nil {
-				t.Error(err)
-			}
-
-			require.EqualValues(t, 1, mocks.mailer.calls)
-			assert.EqualValues(t, ts.email, mocks.mailer.recipient)
-			assert.NotNil(t, mocks.mailer.data)
-
-			var output struct {
-				User data.User `json:"user"`
-			}
-			err = json.NewDecoder(response.Body).Decode(&output)
-
-			assert.EqualValues(t, 1, output.User.ID)
-			assert.Equal(t, ts.username, output.User.Name)
-			assert.Equal(t, ts.email, output.User.Email)
-			assert.Equal(t, false, output.User.Activated)
-
-		})
-	}
-
-	t.Run("returns bad request on invalid json processing", func(t *testing.T) {
-		input := []byte(`{ "foo": "bar" "ha"}`)
-
-		columns := sqlmock.NewRows([]string{"id", "version", "created_at"})
-		mocks.db.ExpectQuery("").WillReturnRows(columns.AddRow(1, 1, time.Now()))
-
-		response := tsrv.request(t, http.MethodPost, "/v1/users/register", input)
-		assert.Equal(t, http.StatusBadRequest, response.StatusCode)
-	})
-
-	t.Run("returns validation failed if email is duplicated", func(t *testing.T) {
-		input := envelope{
-			"name":     "foo",
-			"email":    "foo@example.com",
-			"password": "mypassword",
+	t.Run("handles basic requests", func(t *testing.T) {
+		input := map[string]string{
+			"name":     "foobar",
+			"email":    "foobar@example.com",
+			"password": "my password",
 		}
 		inputJSON, err := json.Marshal(input)
 		if err != nil {
 			t.Fatal(err)
 		}
-
-		error := errors.New("user_email_key")
-		mocks.db.ExpectQuery("INSERT").WillReturnError(error)
 
 		response := tsrv.request(t, http.MethodPost, "/v1/users/register", inputJSON)
-		assert.Equal(t, http.StatusUnprocessableEntity, response.StatusCode)
-	})
-}
+		require.Equal(t, http.StatusCreated, response.StatusCode)
 
-func TestActivateUsersHandler(t *testing.T) {
-	app, mocks := newTestApplication(t)
-	tsrv := newTestServer(app.routes())
+		mailData, ok := mock.mailer.data.(map[string]any)
+		require.NotNil(t, mailData)
+		require.True(t, ok)
 
-	t.Run("activates user when token is found", func(t *testing.T) {
-		input := map[string]string{
-			"token": "abcdefghijklmnopqrstuvwxyz",
-		}
-
-		inputJSON, err := json.Marshal(input)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		columns := sqlmock.NewRows([]string{"id", "created_at", "name", "email", "password_hash", "activated", "version"})
-
-		password := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
-
-		mocks.db.ExpectQuery("SELECT").WillReturnRows(columns.AddRow(1, time.Now(), "foo", "foo@example.com", password, false, 1))
-		mocks.db.ExpectQuery("UPDATE users").WillReturnRows(sqlmock.NewRows([]string{"version"}).AddRow(1))
-		mocks.db.ExpectExec("DELETE FROM tokens").WillReturnResult(sqlmock.NewResult(1, 1))
-
-		t.Log(string(inputJSON))
-		response := tsrv.request(t, http.MethodPut, "/v1/users/activated", inputJSON)
-		require.Equal(t, http.StatusOK, response.StatusCode)
-		if err = mocks.db.ExpectationsWereMet(); err != nil {
-			t.Error(err)
-		}
+		assert.Equal(t, mocks.MockPlaintext, mailData["Token"])
 
 		var output struct {
 			User data.User `json:"user"`
 		}
 		err = json.NewDecoder(response.Body).Decode(&output)
-
-		assert.EqualValues(t, 1, output.User.ID)
-		assert.True(t, output.User.Activated)
-
-	})
-
-	t.Run("return validation error response when tokens is not found", func(t *testing.T) {
-		input := map[string]string{
-			"token": "abcdefghijklmnopqrstuvwxyz",
+		if err != nil {
+			t.Fatal(err)
 		}
 
+		assert.EqualValues(t, 3, output.User.ID)
+		assert.Equal(t, "foobar", output.User.Name)
+		assert.False(t, output.User.Activated)
+	})
+
+	t.Run("validates requests", func(t *testing.T) {
+		input := map[string]string{
+			"name":     "ha",
+			"email":    "arexample.com",
+			"password": "short",
+		}
 		inputJSON, err := json.Marshal(input)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		mocks.db.ExpectQuery("SELECT").WillReturnError(sql.ErrNoRows)
-		response := tsrv.request(t, http.MethodPut, "/v1/users/activated", inputJSON)
+		response := tsrv.request(t, http.MethodPost, "/v1/users/register", inputJSON)
 		require.Equal(t, http.StatusUnprocessableEntity, response.StatusCode)
-		if err = mocks.db.ExpectationsWereMet(); err != nil {
-			t.Error(err)
-		}
 	})
 
-	t.Run("return validation error response when tokens is invalid", func(t *testing.T) {
+	t.Run("returns bad request on invalid json processing", func(t *testing.T) {
+		input := []byte(`{ "name" "ha" "email": "ha@example.com"}`)
+		response := tsrv.request(t, http.MethodPost, "/v1/users/register", input)
+		require.Equal(t, http.StatusBadRequest, response.StatusCode)
+	})
+
+	t.Run("returns validation failed if email is duplicated", func(t *testing.T) {
 		input := map[string]string{
-			"token": "too short",
+			"name":     "foo",
+			"email":    "foo@example.com",
+			"password": "mypassword",
+		}
+		JSON, err := json.Marshal(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		response := tsrv.request(t, http.MethodPost, "/v1/users/register", JSON)
+		require.Equal(t, http.StatusUnprocessableEntity, response.StatusCode)
+	})
+}
+
+func TestActivateUsersHandler(t *testing.T) {
+	app, _ := newTestApplication(t)
+	tsrv := newTestServer(app.routes())
+
+	t.Run("activates user when token is found", func(t *testing.T) {
+		input := map[string]string{
+			"token": mocks.MockActivationToken.Plaintext,
+		}
+		inputJSON, err := json.Marshal(input)
+		if err != nil {
+			t.Fatal(err)
 		}
 
+		response := tsrv.request(t, http.MethodPut, "/v1/users/activated", inputJSON)
+		require.Equal(t, http.StatusOK, response.StatusCode)
+
+		var output struct {
+			User data.User `json:"user"`
+		}
+		err = json.NewDecoder(response.Body).Decode(&output)
+		if err != nil {
+			t.Fatal(err)
+		}
+		assert.EqualValues(t, 1, output.User.ID)
+		assert.True(t, output.User.Activated)
+
+	})
+	t.Run("return validation error response when token is not found", func(t *testing.T) {
+		input := map[string]string{
+			"token": mocks.MockPlaintext,
+		}
+		inputJSON, err := json.Marshal(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		response := tsrv.request(t, http.MethodPut, "/v1/users/activated", inputJSON)
+		require.Equal(t, http.StatusUnprocessableEntity, response.StatusCode)
+	})
+	t.Run("return validation error response when token is invalid", func(t *testing.T) {
+		input := map[string]string{
+			"token": "nqwejqwej",
+		}
 		inputJSON, err := json.Marshal(input)
 		if err != nil {
 			t.Fatal(err)
