@@ -31,6 +31,12 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+var anonymousUser = &User{}
+
+func (u *User) IsAnonymous() bool {
+	return u == anonymousUser
+}
+
 func ValidateEmail(v *validator.Validator, email string) {
 	v.Check(email != "", "email", "must be provided")
 	v.Check(validator.Matches(email, validator.EmailRX), "email", "must be a valid email address")
