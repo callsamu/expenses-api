@@ -75,6 +75,11 @@ func (m *UserModel) GetForToken(scope string, plaintext string) (*data.User, err
 			return MockNonActivatedUser, nil
 		}
 		return nil, data.ErrRecordNotFound
+	case data.ScopeAuthentication:
+		if plaintext == MockAuthenticationToken.Plaintext {
+			return MockActivatedUser, nil
+		}
+		return nil, data.ErrRecordNotFound
 	}
 	return nil, data.ErrRecordNotFound
 }
