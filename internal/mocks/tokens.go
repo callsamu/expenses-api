@@ -16,12 +16,12 @@ var MockActivationToken = &data.Token{
 	Scope:     data.ScopeActivation,
 }
 
-//var MockAuthenticationToken = &data.Token{
-//	UserID:    1,
-//	Plaintext: "abcabcabcabcabcabcabcabc02",
-//	Expiry:    time.Now().Add(time.Hour),
-//	Scope:     data.,
-//}
+var MockAuthenticationToken = &data.Token{
+	UserID:    1,
+	Plaintext: "abcabcabcabcabcabcabcabc02",
+	Expiry:    time.Now().Add(time.Hour),
+	Scope:     data.ScopeAuthentication,
+}
 
 type TokenModel struct{}
 
