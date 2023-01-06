@@ -132,7 +132,7 @@ func (m UserModel) GetByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-func (m *UserModel) Update(user *User) error {
+func (m UserModel) Update(user *User) error {
 	query := `
 		UPDATE users
 		SET name = $1, email = $2, password_hash = $3, activated = $4
@@ -166,7 +166,7 @@ func (m *UserModel) Update(user *User) error {
 	return nil
 }
 
-func (m *UserModel) GetForToken(scope string, tokenPlaintext string) (*User, error) {
+func (m UserModel) GetForToken(scope string, tokenPlaintext string) (*User, error) {
 	tokenHash := sha256.Sum256([]byte(tokenPlaintext))
 
 	query := `
