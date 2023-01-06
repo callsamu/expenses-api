@@ -136,3 +136,75 @@ func TestActivateUsersHandler(t *testing.T) {
 		require.Equal(t, http.StatusUnprocessableEntity, response.StatusCode)
 	})
 }
+
+func TestSendAuthTokenHandler(t *testing.T) {
+	app, _ := newTestApplication(t)
+	tsrv := newTestServer(app.routes())
+
+	t.Run("sends token when user is authenticated", func(t *testing.T) {
+		input := map[string]string{
+			"email":    "bar@example.com",
+			"password": "mypassword",
+		}
+		inputJSON, err := json.Marshal(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		response := tsrv.request(t, http.MethodPost, "/v1/users/authentication", inputJSON)
+		require.Equal(t, http.StatusCreated, response.StatusCode)
+
+		var output struct {
+			AuthenticationToken data.Token `json:"authentication_token"`
+		}
+		err = json.NewDecoder(response.Body).Decode(&output)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log(output)
+		assert.Equal(t, mocks.MockPlaintext, output.AuthenticationToken.Plaintext)
+	})
+
+	t.Run("validates credentials", func(t *testing.T) {
+		input := map[string]string{
+			"email":    "invalidemail",
+			"password": "mypassword",
+		}
+		inputJSON, err := json.Marshal(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		response := tsrv.request(t, http.MethodPost, "/v1/users/authentication", inputJSON)
+		require.Equal(t, http.StatusUnprocessableEntity, response.StatusCode)
+	})
+
+	t.Run("return status unauthorized if email is not found", func(t *testing.T) {
+		input := map[string]string{
+			"email":    "foobar@example.com",
+			"password": "mypassword",
+		}
+		inputJSON, err := json.Marshal(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		response := tsrv.request(t, http.MethodPost, "/v1/users/authentication", inputJSON)
+		require.Equal(t, http.StatusUnauthorized, response.StatusCode)
+	})
+
+	t.Run("return status unauthorized if password does not match", func(t *testing.T) {
+		input := map[string]string{
+			"email":    "foobar@example.com",
+			"password": "notmypassword",
+		}
+		inputJSON, err := json.Marshal(input)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		response := tsrv.request(t, http.MethodPost, "/v1/users/authentication", inputJSON)
+		require.Equal(t, http.StatusUnauthorized, response.StatusCode)
+	})
+}
