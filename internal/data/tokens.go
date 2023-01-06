@@ -17,11 +17,11 @@ const (
 )
 
 type Token struct {
-	UserID    int64
-	Plaintext string
-	Hash      []byte
-	Expiry    time.Time
-	Scope     string
+	UserID    int64     `json:"-"`
+	Plaintext string    `json:"token"`
+	Hash      []byte    `json:"-"`
+	Expiry    time.Time `json:"expiry"`
+	Scope     string    `json:"-"`
 }
 
 func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error) {
