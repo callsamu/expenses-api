@@ -57,6 +57,21 @@ func ValidateUser(v *validator.Validator, user *User) {
 	}
 }
 
+func (p *password) Matches(plaintext string) (bool, error) {
+	err := bcrypt.CompareHashAndPassword(p.Hash, []byte(plaintext))
+
+	if err != nil {
+		switch {
+		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
+			return false, nil
+		default:
+			return false, err
+		}
+	}
+
+	return true, nil
+}
+
 func (p *password) Set(plaintext string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(plaintext), 12)
 	if err != nil {
