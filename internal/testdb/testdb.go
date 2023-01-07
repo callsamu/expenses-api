@@ -11,7 +11,7 @@ import (
 )
 
 const migrations = "file://../../migrations"
-const dsn = "postgres://pfapi_test:postgres@localhost:5432/pfapi_test?sslmode=disable"
+const dsn = "postgres://expenses_test:postgres@localhost:5432/expenses_test?sslmode=disable"
 
 type TestDB struct {
 	DB *sql.DB
