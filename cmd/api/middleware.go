@@ -62,6 +62,8 @@ func (app *application) enableCORS(next http.Handler) http.Handler {
 				w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, PATCH, PUT, DELETE")
 				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 				w.WriteHeader(http.StatusOK)
+
+				return
 			}
 		} else {
 			w.Header().Set("Vary", "Origin")
@@ -76,6 +78,8 @@ func (app *application) enableCORS(next http.Handler) http.Handler {
 							w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, PATCH, PUT, DELETE")
 							w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 							w.WriteHeader(http.StatusOK)
+
+							return
 						}
 					}
 				}
