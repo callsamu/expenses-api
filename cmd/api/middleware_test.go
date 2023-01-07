@@ -96,3 +96,89 @@ func TestAuthenticateMiddleware(t *testing.T) {
 	}
 
 }
+
+func TestEnableCORS(t *testing.T) {
+	app, _ := newTestApplication(t)
+
+	cases := []struct {
+		name           string
+		origin         string
+		trustedOrigins []string
+
+		method        string
+		requestMethod string
+
+		wantHeader                 string
+		wantAllowCORSUnsafeMethods bool
+	}{
+		{
+			name:           "enables every origin when trustedOrigins contains a single wildcard",
+			origin:         "https://bar.net",
+			trustedOrigins: []string{"*"},
+			method:         http.MethodGet,
+			wantHeader:     "*",
+		},
+		{
+			name:           "sends respective origin when it matches one of trustedOrigins",
+			origin:         "https://bar.net",
+			trustedOrigins: []string{"https://foo.com", "https://bar.net"},
+			method:         http.MethodGet,
+			wantHeader:     "https://bar.net",
+		},
+		{
+			name:           "confirms preflight request when trustedOrigin is wildcard",
+			origin:         "https://bar.net",
+			trustedOrigins: []string{"*"},
+			method:         http.MethodOptions,
+			wantHeader:     "*",
+
+			requestMethod:              "PATCH",
+			wantAllowCORSUnsafeMethods: true,
+		},
+		{
+			name:           "confirms preflight request when origin matches trustedOrigins",
+			origin:         "https://bar.net",
+			trustedOrigins: []string{"https://foo.com", "https://bar.net"},
+			method:         http.MethodOptions,
+			wantHeader:     "https://bar.net",
+
+			requestMethod:              "PATCH",
+			wantAllowCORSUnsafeMethods: true,
+		},
+	}
+
+	for _, ts := range cases {
+		t.Run(ts.name, func(t *testing.T) {
+			app.config.cors.trustedOrigins = ts.trustedOrigins
+
+			rr := httptest.NewRecorder()
+			request, err := http.NewRequest(ts.method, "/", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			request.Header.Set("Origin", ts.origin)
+			request.Header.Set("Access-Control-Request-Method", ts.requestMethod)
+
+			next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Write([]byte("OK"))
+			})
+			app.enableCORS(next).ServeHTTP(rr, request)
+			response := rr.Result()
+
+			header := response.Header.Get("Access-Control-Allow-Origin")
+			assert.Equal(t, ts.wantHeader, header)
+
+			if ts.method == http.MethodOptions {
+				allowedMethods := response.Header.Get("Access-Control-Allow-Methods")
+				assert.Equal(t, "OPTIONS, PATCH, PUT, DELETE", allowedMethods)
+
+				allowedHeaders := response.Header.Get("Access-Control-Allow-Headers")
+				assert.Equal(t, "Authorization, Content-Type", allowedHeaders)
+			}
+
+			assert.Equal(t, http.StatusOK, response.StatusCode)
+		})
+
+	}
+
+}

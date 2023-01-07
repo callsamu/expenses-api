@@ -46,3 +46,42 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+func (app *application) enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		trustedOrigins := app.config.cors.trustedOrigins
+
+		origin := r.Header.Get("Origin")
+		requestAllowMethod := r.Header.Get("Access-Control-Request-Method")
+
+		if len(trustedOrigins) == 1 && trustedOrigins[0] == "*" {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+
+			// Check if is preflight request
+			if origin != "" && r.Method == http.MethodOptions && requestAllowMethod != "" {
+				w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, PATCH, PUT, DELETE")
+				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+				w.WriteHeader(http.StatusOK)
+			}
+		} else {
+			w.Header().Set("Vary", "Origin")
+
+			if origin != "" {
+				for i := range trustedOrigins {
+					if origin == trustedOrigins[i] {
+						w.Header().Set("Access-Control-Allow-Origin", origin)
+
+						// Check if is preflight request
+						if r.Method == http.MethodOptions && requestAllowMethod != "" {
+							w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, PATCH, PUT, DELETE")
+							w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+							w.WriteHeader(http.StatusOK)
+						}
+					}
+				}
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
