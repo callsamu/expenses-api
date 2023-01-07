@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/callsamu/expenses-api/internal/data"
@@ -32,6 +33,9 @@ type config struct {
 		username string
 		password string
 		sender   string
+	}
+	cors struct {
+		trustedOrigins []string
 	}
 }
 
@@ -86,6 +90,11 @@ func main() {
 	flag.StringVar(&cfg.smtp.username, "smtp-username", "", "SMTP Username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP Password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "", "SMTP Sender")
+
+	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(flag string) error {
+		cfg.cors.trustedOrigins = strings.Fields(flag)
+		return nil
+	})
 
 	flag.Parse()
 
