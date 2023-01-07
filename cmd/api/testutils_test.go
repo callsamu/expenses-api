@@ -84,3 +84,14 @@ func (ts *testServer) request(t *testing.T, method string, url string, body []by
 
 	return response
 }
+
+func (ts *testServer) requestWithAuth(t *testing.T, method string, url string, body []byte, token string) *http.Response {
+	request, err := http.NewRequest(method, ts.URL+url, bytes.NewBuffer(body))
+	request.Header.Set("Authorization", token)
+	response, err := ts.Client().Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return response
+}
