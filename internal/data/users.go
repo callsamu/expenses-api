@@ -31,10 +31,10 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
-var anonymousUser = &User{}
+var AnonymousUser = &User{}
 
 func (u *User) IsAnonymous() bool {
-	return u == anonymousUser
+	return u == AnonymousUser
 }
 
 func ValidateEmail(v *validator.Validator, email string) {
