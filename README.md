@@ -17,8 +17,8 @@ You can see a list of all available flags by starting the
 application with the -help flag.
 
 ```
-  make build/api
-  ./bin/api -help
+make build/api
+./bin/api -help
 ```
 
 ### Database 
@@ -37,13 +37,13 @@ an user's email address. An example of SMTP configuration can
 be seen on the Makefile's `run/api` target:
 
 ```
-	exec bin/api \
-		-db-dsn=${EXPENSES-DB-DSN} \
-		-smtp-host=${EXPENSES-SMTP-HOST} \
-		-smtp-port=${EXPENSES-SMTP-PORT} \
-		-smtp-username=${EXPENSES-SMTP-USERNAME} \
-		-smtp-password=${EXPENSES-SMTP-PASSWORD} \
-		-smtp-sender=${EXPENSES-SMTP-SENDER}
+exec bin/api \
+	-db-dsn=${EXPENSES-DB-DSN} \
+	-smtp-host=${EXPENSES-SMTP-HOST} \
+	-smtp-port=${EXPENSES-SMTP-PORT} \
+	-smtp-username=${EXPENSES-SMTP-USERNAME} \
+	-smtp-password=${EXPENSES-SMTP-PASSWORD} \
+	-smtp-sender=${EXPENSES-SMTP-SENDER}
 ```
 
 These SMTP credentials can be gotten from a email service such
