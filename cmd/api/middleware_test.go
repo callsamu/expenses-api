@@ -182,3 +182,34 @@ func TestEnableCORSMiddleware(t *testing.T) {
 	}
 
 }
+
+func TestRateLimitMiddleware(t *testing.T) {
+	app, _ := newTestApplication(t)
+
+	app.config.limiter.enabled = true
+	app.config.limiter.rps = 2
+	app.config.limiter.burst = 4
+
+	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
+	tsrv := newTestServer(app.rateLimit(next))
+
+	var tooManyRequestsResponse *http.Response
+
+	for i := 0; i < 10; i += 1 {
+		response, err := tsrv.Client().Get(tsrv.URL + "/")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if response.StatusCode == http.StatusTooManyRequests {
+			tooManyRequestsResponse = response
+		}
+	}
+
+	t.Log(tooManyRequestsResponse)
+	require.NotNil(t, tooManyRequestsResponse, "should return at least one TooManyRequests response")
+	assert.Equal(t, http.StatusTooManyRequests, tooManyRequestsResponse.StatusCode)
+
+}
