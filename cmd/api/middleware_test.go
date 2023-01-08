@@ -97,7 +97,7 @@ func TestAuthenticateMiddleware(t *testing.T) {
 
 }
 
-func TestEnableCORS(t *testing.T) {
+func TestEnableCORSMiddleware(t *testing.T) {
 	app, _ := newTestApplication(t)
 
 	cases := []struct {
