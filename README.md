@@ -8,6 +8,7 @@ Still very much a work in progress.
 - Multiple users with authentication for each
 - User activation via email
 - Configurable CORS handling
+- Built-in rate limiter
 - More soon
 
 ## Configuration
