@@ -49,10 +49,15 @@ exec bin/api \
 These SMTP credentials can be gotten from a email service such
 as Mailtrap or SendGrid.
 
+
+### Rate Limiting 
+
+Rate limiting is enabled by default. To disable it, set `-limiter-enabled` to false.
+
 ### CORS Handling
 
 Cross Origin Requests handling can be configured by the 
--cors-trusted-origins flag. By setting it to "*", you
+`-cors-trusted-origins` flag. By setting it to "*", you
 especify that every origin should be trusted, which is
 useful if you wish that your Expenses instance is publically 
 available to every browser frontend. However, if you want
