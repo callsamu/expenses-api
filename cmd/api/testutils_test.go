@@ -41,6 +41,7 @@ func newTestApplication(t *testing.T) (*application, mock) {
 		port: 4000,
 		env:  "testing",
 	}
+	cfg.limiter.enabled = false
 
 	log := log.New(os.Stdout, "", 0)
 
