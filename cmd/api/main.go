@@ -128,15 +128,7 @@ func main() {
 		),
 	}
 
-	srv := http.Server{
-		Handler:      app.routes(),
-		WriteTimeout: 30 * time.Second,
-		ReadTimeout:  10 * time.Second,
-		Addr:         fmt.Sprintf(":%d", cfg.port),
-	}
-
-	app.logger.Printf("starting %s server at port :%d", cfg.env, cfg.port)
-	err = srv.ListenAndServe()
+	err = app.serve()
 	if err != nil {
 		app.logger.Fatal(err)
 	}
