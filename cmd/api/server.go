@@ -31,7 +31,14 @@ func (app *application) serve() error {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		shutdownError <- srv.Shutdown(ctx)
+		err := srv.Shutdown(ctx)
+		if err != nil {
+			shutdownError <- err
+			return
+		}
+
+		app.wg.Wait()
+		shutdownError <- nil
 	}()
 
 	app.logger.Printf("starting %s server at port :%d", app.config.env, app.config.port)
