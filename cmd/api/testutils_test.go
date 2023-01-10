@@ -2,14 +2,13 @@ package main
 
 import (
 	"bytes"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/callsamu/expenses-api/internal/data"
 	"github.com/callsamu/expenses-api/internal/mocks"
+	"github.com/rs/zerolog"
 )
 
 type mockMailer struct {
@@ -43,7 +42,8 @@ func newTestApplication(t *testing.T) (*application, mock) {
 	}
 	cfg.limiter.enabled = false
 
-	log := log.New(os.Stdout, "", 0)
+	writer := zerolog.NewTestWriter(t)
+	log := zerolog.New(writer)
 
 	mockMailer := &mockMailer{}
 	mockUsers := &mocks.UserModel{}

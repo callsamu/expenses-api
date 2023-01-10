@@ -26,7 +26,9 @@ func (app *application) serve() error {
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 		s := <-quit
-		app.logger.Printf("shutting down server (signal: %s)", s.String())
+		app.logger.Info().
+			Str("signal", s.String()).
+			Msg("shutting down server")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -41,7 +43,10 @@ func (app *application) serve() error {
 		shutdownError <- nil
 	}()
 
-	app.logger.Printf("starting %s server at port :%d", app.config.env, app.config.port)
+	app.logger.Info().
+		Str("environment", app.config.env).
+		Int("port", app.config.port).
+		Msg("starting server")
 
 	err := srv.ListenAndServe()
 	if !errors.Is(err, http.ErrServerClosed) {
@@ -53,6 +58,9 @@ func (app *application) serve() error {
 		return err
 	}
 
-	app.logger.Printf("stopped server at address %s", srv.Addr)
+	app.logger.Info().
+		Str("address", srv.Addr).
+		Msg("server stopped")
+
 	return nil
 }

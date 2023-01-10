@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -13,6 +12,7 @@ import (
 	"github.com/callsamu/expenses-api/internal/data"
 	"github.com/callsamu/expenses-api/internal/mailer"
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog"
 )
 
 const version = "1.0.0"
@@ -44,10 +44,9 @@ type config struct {
 }
 
 type application struct {
-	wg sync.WaitGroup
-
+	wg     sync.WaitGroup
 	config config
-	logger *log.Logger
+	logger zerolog.Logger
 	models data.Models
 	mailer interface {
 		Send(recipient string, template string, data any) error
@@ -108,11 +107,15 @@ func main() {
 
 	flag.Parse()
 
-	log := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	log := zerolog.New(os.Stdout).
+		With().
+		Timestamp().
+		Logger().
+		Level(zerolog.InfoLevel)
 
 	db, err := openDB(cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Stack()
 	}
 	defer db.Close()
 
@@ -131,6 +134,6 @@ func main() {
 
 	err = app.serve()
 	if err != nil {
-		app.logger.Fatal(err)
+		app.logger.Fatal().Err(err).Stack()
 	}
 }
