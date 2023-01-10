@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/callsamu/expenses-api/internal/data"
@@ -43,6 +44,8 @@ type config struct {
 }
 
 type application struct {
+	wg sync.WaitGroup
+
 	config config
 	logger *log.Logger
 	models data.Models
