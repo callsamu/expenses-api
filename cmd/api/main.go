@@ -13,6 +13,7 @@ import (
 	"github.com/callsamu/expenses-api/internal/mailer"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
 )
 
 const version = "1.0.0"
@@ -107,6 +108,7 @@ func main() {
 
 	flag.Parse()
 
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 	log := zerolog.New(os.Stdout).
 		With().
 		Timestamp().

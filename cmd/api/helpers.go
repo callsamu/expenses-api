@@ -65,7 +65,7 @@ func (app *application) background(fn func()) {
 
 		defer func() {
 			if err := recover(); err != nil {
-				app.logger.Panic().Err(fmt.Errorf("%s", err)).Send()
+				app.logger.Panic().Stack().Err(fmt.Errorf("%s", err)).Send()
 			}
 		}()
 
