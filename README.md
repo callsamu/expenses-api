@@ -24,9 +24,10 @@ make build/api
 
 ### Database 
 
-Expenses uses the PostgreSQL database. By supplying the
-`-db-dsn` flag, you especify to which PostgreSQL instance
-the API should connect to at startup. 
+Expenses uses the PostgreSQL database. Supply a value to the
+the `-db-dsn` flag via the environment variable `EXPENSES_DB_DSN`
+to especify to which PostgreSQL instance the API should connect 
+to at startup.
 
 Connection Pool settings can be edited using the rest of
 the `-db` flags.
@@ -40,12 +41,17 @@ be seen on the Makefile's `run/api` target:
 ```
 exec bin/api \
 	-db-dsn=${EXPENSES-DB-DSN} \
-	-smtp-host=${EXPENSES-SMTP-HOST} \
-	-smtp-port=${EXPENSES-SMTP-PORT} \
-	-smtp-username=${EXPENSES-SMTP-USERNAME} \
-	-smtp-password=${EXPENSES-SMTP-PASSWORD} \
-	-smtp-sender=${EXPENSES-SMTP-SENDER}
+	-smtp-host=${EXPENSES_SMTP_HOST} \
+	-smtp-port=${EXPENSES_SMTP_PORT} \
+	-smtp-sender=${EXPENSES_SMTP_SENDER}
 ```
+
+Note that no values are passed to the `-smtp-username` and `-smtp-password`
+flags. Just as `-db-dsn`, for security reasons, they receive their values
+via the environment variables `EXPENSES_SMTP_USERNAME` and `EXPENSES_SMTP_PASSWORD`.
+
+
+However, it is recommended that you pass 
 
 These SMTP credentials can be gotten from a email service such
 as Mailtrap or SendGrid.
