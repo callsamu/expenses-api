@@ -86,7 +86,7 @@ func main() {
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("EXPENSES_DB_DSN"), "PostgreSQL DSN")
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max idle time")
@@ -97,8 +97,8 @@ func main() {
 
 	flag.StringVar(&cfg.smtp.host, "smtp-host", "", "SMTP Host")
 	flag.IntVar(&cfg.smtp.port, "smtp-port", 2525, "SMTP Port")
-	flag.StringVar(&cfg.smtp.username, "smtp-username", "", "SMTP Username")
-	flag.StringVar(&cfg.smtp.password, "smtp-password", "", "SMTP Password")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("EXPENSES_SMTP_USERNAME"), "SMTP Username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("EXPENSES_SMTP_PASSWORD"), "SMTP Password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", "", "SMTP Sender")
 
 	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(flag string) error {
