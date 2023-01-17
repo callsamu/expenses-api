@@ -142,7 +142,7 @@ func TestUserModelFindsUserByToken(t *testing.T) {
 	for _, ts := range cases {
 		t.Run(ts.name, func(t *testing.T) {
 			retrievedUser, err := model.GetForToken(ScopeActivation, ts.plaintext)
-			require.ErrorIs(t, ts.err, err)
+			require.ErrorIs(t, err, ts.err)
 			if ts.err != nil {
 				return
 			}
