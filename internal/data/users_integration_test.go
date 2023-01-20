@@ -89,7 +89,7 @@ func TestUserModelUpdatesUser(t *testing.T) {
 
 	t.Run("updates user", func(t *testing.T) {
 		user.Name = "foobar"
-		err := model.Update(&user)
+		err := model.Update(user)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -103,7 +103,7 @@ func TestUserModelUpdatesUser(t *testing.T) {
 
 	t.Run("optimistic locks", func(t *testing.T) {
 		user.Version = 2
-		err := model.Update(&user)
+		err := model.Update(user)
 		assert.ErrorIs(t, err, ErrEditConflict)
 	})
 
