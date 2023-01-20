@@ -56,3 +56,43 @@ func TestExpenseModelInsertExpense(t *testing.T) {
 
 	})
 }
+
+func TestExpensesModelGetsExpenses(t *testing.T) {
+	if testing.Short() {
+		t.Skip("data: skipping integration test")
+	}
+
+	tdb := testdb.Open(t)
+	defer tdb.Close()
+
+	SeedUsers(t, tdb)
+	SeedExpenses(t, tdb)
+
+	model := ExpenseModel{DB: tdb.DB}
+
+	cases := []struct {
+		name string
+		IDs  []int64
+	}{
+		{
+			name: "gets all expenses",
+			IDs:  []int64{1, 2, 3, 4},
+		},
+	}
+
+	for _, ts := range cases {
+		t.Run(ts.name, func(t *testing.T) {
+			expenses, err := model.GetAll()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			require.Equal(t, len(ts.IDs), len(expenses))
+
+			for i := range ts.IDs {
+				assert.Equal(t, ts.IDs[i], expenses[i].ID)
+			}
+
+		})
+	}
+}

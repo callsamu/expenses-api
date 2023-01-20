@@ -23,6 +23,56 @@ type ExpenseModel struct {
 	DB *sql.DB
 }
 
+func (m ExpenseModel) GetAll() ([]*Expense, error) {
+	query := `
+		SELECT id, user_id, date, recipient, description, category, amount, currency, version
+		FROM expenses
+		ORDER by id
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var expenses []*Expense
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var expense Expense
+
+		var amount int64
+		var currency string
+
+		err := rows.Scan(
+			&expense.ID,
+			&expense.UserID,
+			&expense.Date,
+			&expense.Recipient,
+			&expense.Description,
+			&expense.Category,
+			&amount,
+			&currency,
+			&expense.Version,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		expense.Value = money.New(amount, currency)
+		expenses = append(expenses, &expense)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return expenses, nil
+}
+
 func (m ExpenseModel) Insert(expense *Expense) error {
 	query := `
 		INSERT INTO expenses (user_id, recipient, description, category, amount, currency)

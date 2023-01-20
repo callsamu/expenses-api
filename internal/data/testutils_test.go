@@ -4,13 +4,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Rhymond/go-money"
 	"github.com/callsamu/expenses-api/internal/testdb"
 )
 
-func SeedUsers(t *testing.T, tdb *testdb.TestDB) []User {
+func SeedUsers(t *testing.T, tdb *testdb.TestDB) []*User {
 	time := time.Now()
 
-	users := []User{
+	users := []*User{
 		{
 			ID:        1,
 			Name:      "foo",
@@ -30,8 +31,7 @@ func SeedUsers(t *testing.T, tdb *testdb.TestDB) []User {
 	}
 
 	for _, user := range users {
-		ptr := &user
-		err := ptr.Password.Set("password")
+		err := user.Password.Set("password")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -98,4 +98,65 @@ func SeedTokens(t *testing.T, tdb *testdb.TestDB) []*Token {
 	}
 
 	return tokens
+}
+
+func SeedExpenses(t *testing.T, tdb *testdb.TestDB) []*Expense {
+	expenses := []*Expense{
+		{
+			ID:        1,
+			UserID:    1,
+			Recipient: "Foo Store",
+			Category:  "Foos",
+			Date:      time.Now(),
+			Value:     money.NewFromFloat(25, money.USD),
+		},
+		{
+			ID:        2,
+			UserID:    1,
+			Recipient: "Bar Store",
+			Category:  "Foos",
+			Date:      time.Now().Add(24 * time.Hour),
+			Value:     money.NewFromFloat(24, money.USD),
+		},
+		{
+			ID:        3,
+			UserID:    1,
+			Recipient: "FooBar Store",
+			Category:  "Bars",
+			Date:      time.Now().Add(-24 * time.Hour),
+			Value:     money.NewFromFloat(1, money.EUR),
+		},
+		{
+			ID:        4,
+			UserID:    1,
+			Recipient: "FooBarXYZ Store",
+			Category:  "Bars",
+			Date:      time.Now(),
+			Value:     money.NewFromFloat(50, money.USD),
+		},
+	}
+
+	for _, expense := range expenses {
+		query := `
+			INSERT INTO expenses (user_id, date, recipient, description, category, amount, currency)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+		`
+
+		args := []any{
+			expense.UserID,
+			expense.Date,
+			expense.Recipient,
+			expense.Description,
+			expense.Category,
+			expense.Value.Amount(),
+			expense.Value.Currency().Code,
+		}
+
+		_, err := tdb.DB.Exec(query, args...)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	return expenses
 }
