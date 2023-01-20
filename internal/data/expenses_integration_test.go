@@ -71,23 +71,29 @@ func TestExpensesModelGetsExpenses(t *testing.T) {
 	model := ExpenseModel{DB: tdb.DB}
 
 	cases := []struct {
-		name string
-		IDs  []int64
+		name      string
+		IDs       []int64
+		recipient string
 	}{
 		{
 			name: "gets all expenses",
 			IDs:  []int64{1, 2, 3, 4},
 		},
+		{
+			name:      "searches expenses by recipient",
+			IDs:       []int64{3, 4},
+			recipient: "FooBar",
+		},
 	}
 
 	for _, ts := range cases {
 		t.Run(ts.name, func(t *testing.T) {
-			expenses, err := model.GetAll()
+			expenses, err := model.GetAll("%" + ts.recipient + "%")
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			require.Equal(t, len(ts.IDs), len(expenses))
+			require.Equal(t, len(ts.IDs), len(expenses), "should have same number of results")
 
 			for i := range ts.IDs {
 				assert.Equal(t, ts.IDs[i], expenses[i].ID)

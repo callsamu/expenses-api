@@ -23,10 +23,11 @@ type ExpenseModel struct {
 	DB *sql.DB
 }
 
-func (m ExpenseModel) GetAll() ([]*Expense, error) {
+func (m ExpenseModel) GetAll(recipient string) ([]*Expense, error) {
 	query := `
 		SELECT id, user_id, date, recipient, description, category, amount, currency, version
 		FROM expenses
+		WHERE (recipient ILIKE $1)
 		ORDER by id
 	`
 
@@ -35,7 +36,7 @@ func (m ExpenseModel) GetAll() ([]*Expense, error) {
 
 	var expenses []*Expense
 
-	rows, err := m.DB.QueryContext(ctx, query)
+	rows, err := m.DB.QueryContext(ctx, query, recipient)
 	if err != nil {
 		return nil, err
 	}
