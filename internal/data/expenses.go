@@ -23,24 +23,27 @@ type ExpenseModel struct {
 	DB *sql.DB
 }
 
-func (m ExpenseModel) GetAll(recipient string) ([]*Expense, error) {
+func (m ExpenseModel) GetAll(recipient string, month time.Time) ([]*Expense, error) {
 	query := `
 		SELECT id, user_id, date, recipient, description, category, amount, currency, version
 		FROM expenses
 		WHERE (recipient ILIKE $1)
+		AND ((date BETWEEN $2 AND $3) OR $2 = 'epoch')
 		ORDER by id
 	`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	var expenses []*Expense
+	args := []any{recipient, month, month.AddDate(0, 1, 0)}
 
-	rows, err := m.DB.QueryContext(ctx, query, recipient)
+	rows, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+
+	var expenses []*Expense
 
 	for rows.Next() {
 		var expense Expense

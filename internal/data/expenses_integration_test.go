@@ -2,6 +2,7 @@ package data
 
 import (
 	"testing"
+	"time"
 
 	"github.com/Rhymond/go-money"
 	"github.com/callsamu/expenses-api/internal/testdb"
@@ -74,21 +75,29 @@ func TestExpensesModelGetsExpenses(t *testing.T) {
 		name      string
 		IDs       []int64
 		recipient string
+		month     time.Time
 	}{
 		{
-			name: "gets all expenses",
-			IDs:  []int64{1, 2, 3, 4},
+			name:  "gets all expenses",
+			IDs:   []int64{1, 2, 3, 4},
+			month: time.Unix(0, 0),
 		},
 		{
 			name:      "searches expenses by recipient",
 			IDs:       []int64{3, 4},
 			recipient: "FooBar",
+			month:     time.Unix(0, 0),
+		},
+		{
+			name:  "searches expenses by month",
+			IDs:   []int64{2, 3},
+			month: time.Now().AddDate(0, 1, 0),
 		},
 	}
 
 	for _, ts := range cases {
 		t.Run(ts.name, func(t *testing.T) {
-			expenses, err := model.GetAll("%" + ts.recipient + "%")
+			expenses, err := model.GetAll("%"+ts.recipient+"%", ts.month)
 			if err != nil {
 				t.Fatal(err)
 			}
