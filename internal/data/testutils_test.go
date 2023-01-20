@@ -115,7 +115,7 @@ func SeedExpenses(t *testing.T, tdb *testdb.TestDB) []*Expense {
 			UserID:    1,
 			Recipient: "Bar Store",
 			Category:  "Foos",
-			Date:      time.Now().Add(24 * time.Hour),
+			Date:      time.Now().AddDate(0, 1, 5),
 			Value:     money.NewFromFloat(24, money.USD),
 		},
 		{
@@ -123,7 +123,7 @@ func SeedExpenses(t *testing.T, tdb *testdb.TestDB) []*Expense {
 			UserID:    1,
 			Recipient: "FooBar Store",
 			Category:  "Bars",
-			Date:      time.Now().Add(-24 * time.Hour),
+			Date:      time.Now().AddDate(0, 1, 1),
 			Value:     money.NewFromFloat(1, money.EUR),
 		},
 		{
