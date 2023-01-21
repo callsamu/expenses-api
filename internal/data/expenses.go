@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/Rhymond/go-money"
@@ -23,19 +24,20 @@ type ExpenseModel struct {
 	DB *sql.DB
 }
 
-func (m ExpenseModel) GetAll(recipient string, month time.Time) ([]*Expense, error) {
-	query := `
+func (m ExpenseModel) GetAll(recipient string, month time.Time, filters Filters) ([]*Expense, error) {
+	query := fmt.Sprintf(`
 		SELECT id, user_id, date, recipient, description, category, amount, currency, version
 		FROM expenses
-		WHERE (recipient ILIKE $1)
+		WHERE (recipient ILIKE $1 OR $1 = '')
 		AND ((date BETWEEN $2 AND $3) OR $2 = 'epoch')
-		ORDER by id
-	`
+		ORDER by %s %s, id ASC
+		LIMIT $4 OFFSET $5
+	`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	args := []any{recipient, month, month.AddDate(0, 1, 0)}
+	args := []any{recipient, month, month.AddDate(0, 1, 0), filters.limit(), filters.offset()}
 
 	rows, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {

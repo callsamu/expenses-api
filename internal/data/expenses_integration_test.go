@@ -76,28 +76,64 @@ func TestExpensesModelGetsExpenses(t *testing.T) {
 		IDs       []int64
 		recipient string
 		month     time.Time
+		category  string
+		sort      string
+		page      int
+		pagesize  int
 	}{
 		{
-			name:  "gets all expenses",
-			IDs:   []int64{1, 2, 3, 4},
-			month: time.Unix(0, 0),
+			name:     "gets all expenses",
+			IDs:      []int64{1, 2, 3, 4},
+			month:    time.Unix(0, 0),
+			sort:     "id",
+			page:     1,
+			pagesize: 10,
 		},
 		{
 			name:      "searches expenses by recipient",
 			IDs:       []int64{3, 4},
-			recipient: "FooBar",
+			recipient: "%FooBar%",
 			month:     time.Unix(0, 0),
+			sort:      "id",
+			page:      1,
+			pagesize:  10,
 		},
 		{
-			name:  "searches expenses by month",
-			IDs:   []int64{2, 3},
-			month: time.Now().AddDate(0, 1, 0),
+			name:     "searches expenses by month",
+			IDs:      []int64{2, 3},
+			month:    time.Now().AddDate(0, 1, 0),
+			sort:     "id",
+			page:     1,
+			pagesize: 10,
+		},
+		{
+			name:     "sorts expenses by value",
+			IDs:      []int64{4, 1, 2, 3},
+			month:    time.Unix(0, 0),
+			sort:     "-amount",
+			page:     1,
+			pagesize: 10,
+		},
+		{
+			name:     "paginates expenses",
+			IDs:      []int64{3, 4},
+			month:    time.Unix(0, 0),
+			sort:     "id",
+			page:     2,
+			pagesize: 2,
 		},
 	}
 
 	for _, ts := range cases {
 		t.Run(ts.name, func(t *testing.T) {
-			expenses, err := model.GetAll("%"+ts.recipient+"%", ts.month)
+			filters := Filters{
+				Sort:         ts.sort,
+				SortSafelist: []string{ts.sort},
+				Page:         ts.page,
+				PageSize:     ts.pagesize,
+			}
+
+			expenses, err := model.GetAll(ts.recipient, ts.month, filters)
 			if err != nil {
 				t.Fatal(err)
 			}
