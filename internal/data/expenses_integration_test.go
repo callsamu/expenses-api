@@ -122,6 +122,16 @@ func TestExpensesModelGetsExpenses(t *testing.T) {
 			page:     2,
 			pagesize: 2,
 		},
+		{
+
+			name:     "sorts expenses by value",
+			IDs:      []int64{1, 2},
+			month:    time.Unix(0, 0),
+			category: "Foos",
+			sort:     "id",
+			page:     1,
+			pagesize: 10,
+		},
 	}
 
 	for _, ts := range cases {
@@ -133,7 +143,7 @@ func TestExpensesModelGetsExpenses(t *testing.T) {
 				PageSize:     ts.pagesize,
 			}
 
-			expenses, err := model.GetAll(ts.recipient, ts.month, filters)
+			expenses, err := model.GetAll(ts.recipient, ts.month, ts.category, filters)
 			if err != nil {
 				t.Fatal(err)
 			}

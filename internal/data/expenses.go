@@ -24,20 +24,21 @@ type ExpenseModel struct {
 	DB *sql.DB
 }
 
-func (m ExpenseModel) GetAll(recipient string, month time.Time, filters Filters) ([]*Expense, error) {
+func (m ExpenseModel) GetAll(recipient string, month time.Time, category string, filters Filters) ([]*Expense, error) {
 	query := fmt.Sprintf(`
 		SELECT id, user_id, date, recipient, description, category, amount, currency, version
 		FROM expenses
 		WHERE (recipient ILIKE $1 OR $1 = '')
 		AND ((date BETWEEN $2 AND $3) OR $2 = 'epoch')
+		AND (category = $4 OR $4 = '')
 		ORDER by %s %s, id ASC
-		LIMIT $4 OFFSET $5
+		LIMIT $5 OFFSET $6
 	`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	args := []any{recipient, month, month.AddDate(0, 1, 0), filters.limit(), filters.offset()}
+	args := []any{recipient, month, month.AddDate(0, 1, 0), category, filters.limit(), filters.offset()}
 
 	rows, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {
